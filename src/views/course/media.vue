@@ -160,8 +160,8 @@
           ></el-input-number>
         </el-form-item>
         <el-form-item label="课程价格">
-          <el-radio v-model="temp.radio" label="1">下架</el-radio>
-          <el-radio v-model="temp.radio" label="0">上架</el-radio>
+          <el-radio v-model="temp.status" label="1">下架</el-radio>
+          <el-radio v-model="temp.status" label="0">上架</el-radio>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -214,7 +214,7 @@ export default {
         try: "",
         title: "",
         price: "",
-        radio:1,
+        status:1,
         content:""
       },
       dialogFormVisible: false,
@@ -263,7 +263,18 @@ export default {
         this.listLoading = false;
       }
     },
+    resetTemp() {
+      this.temp = {
+        id: undefined,
+        try: "",
+        title: "",
+        price: "",
+        status:1,
+        content:""
+      }
+    },
     addMedia() {
+        this.resetTemp()
       this.dialogStatus = "create";
       this.dialogFormVisible = true;
       this.$nextTick(() => {
@@ -290,7 +301,7 @@ export default {
     sortChange() {},
     handleSizeChange(v){
         this.pageSize = v
-        console.log(v);
+        // console.log(v);
         this.getlist({
             page:this.pageNum,
             limit:this.pageSize
@@ -298,7 +309,7 @@ export default {
     },
     handleCurrentChange(v){
         this.pageNum = v
-        console.log(v);
+        // console.log(v);
         this.getlist({
             page:this.pageNum,
             limit:this.pageSize
@@ -345,7 +356,7 @@ export default {
         content: this.temp.content,
         cover: "http://dummyimage.com/200x100",
         price: this.temp.price,
-        status: Number.parseInt(this.temp.radio),
+        status: Number.parseInt(this.temp.status),
         try: this.temp.tryContent,
         created_time: time,
         sub_count: 6,
@@ -369,6 +380,8 @@ export default {
         time = dateFtt("yyyy-MM-dd hh:mm:ss", time);
         console.log(time);
         this.temp.updated_time = time
+        this.temp.status = parseInt(this.temp.status)
+        console.log(this.temp);
         let res = await updateMedia(this.temp)
         console.log(res);
         if(res.code === 20000){
@@ -376,6 +389,7 @@ export default {
             this.listData.splice(index,1,this.temp)
             this.dialogFormVisible = false
             this.$message.success("修改成功")
+            this.this.dialogStatus = 'create'
         }
     }
   },
