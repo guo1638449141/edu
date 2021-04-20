@@ -124,6 +124,16 @@
       </el-table-column>
     </el-table>
 
+    <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="1"
+      :page-sizes="[10, 20, 30, 40]"
+      :page-size="20"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total">
+    </el-pagination>
+
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form
         ref="dataForm"
@@ -137,26 +147,26 @@
           <el-input v-model="temp.title" />
         </el-form-item>
         <el-form-item label="试看内容" prop="tryContent">
-          <Tinymce :height="300" :width="600" v-model="tryContent" />
+          <Tinymce :height="300" :width="600" v-model="temp.try" />
         </el-form-item>
         <el-form-item label="课程内容" prop="content">
-          <Tinymce :height="300" :width="600" v-model="content" />
+          <Tinymce :height="300" :width="600" v-model="temp.content" />
         </el-form-item>
         <el-form-item label="课程价格">
           <el-input-number
-            v-model="price"
+            v-model="temp.price"
             @change="handleChange"
             :min="1"
           ></el-input-number>
         </el-form-item>
         <el-form-item label="课程价格">
-          <el-radio v-model="radio" label="1">下架</el-radio>
-          <el-radio v-model="radio" label="0">上架</el-radio>
+          <el-radio v-model="temp.radio" label="1">下架</el-radio>
+          <el-radio v-model="temp.radio" label="0">上架</el-radio>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleAdd">完成添加</el-button>
+        <el-button type="primary" @click="dialogStatus === 'create' ? handleAdd() : updateData()"> {{ dialogStatus === "create" ? "完成添加" : "修改提交" }}</el-button>
       </div>
     </el-dialog>
   </div>
@@ -169,6 +179,8 @@ import {
   deleteMedia,
 } from "../../api/media";
 
+import { dateFtt } from "../../utils/data";
+
 import Tinymce from "@/components/Tinymce/index";
 
 export default {
@@ -178,12 +190,10 @@ export default {
       list: null,
       listData: [],
       total: 0,
-      content: "",
       listLoading: true,
       searchTitle: "",
-      tryContent: "",
-      price: "",
-      radio: 1,
+      pageSize:10,
+      pageNum:1,
       listQuery: {
         page: 1,
         limit: 20,
@@ -201,12 +211,11 @@ export default {
       showReviewer: false,
       temp: {
         id: undefined,
-        importance: 1,
-        remark: "",
-        timestamp: new Date(),
+        try: "",
         title: "",
-        type: "",
-        status: "published",
+        price: "",
+        radio:1,
+        content:""
       },
       dialogFormVisible: false,
       dialogStatus: "",
@@ -243,8 +252,8 @@ export default {
     this.getlist();
   },
   methods: {
-    async getlist() {
-      let res = await fetchList();
+    async getlist(obj) {
+      let res = await fetchList(obj);
       //   console.log(res);
       if (res.code === 20000) {
         this.total = res.data.total;
@@ -279,11 +288,31 @@ export default {
     },
     handleDownload() {},
     sortChange() {},
+    handleSizeChange(v){
+        this.pageSize = v
+        console.log(v);
+        this.getlist({
+            page:this.pageNum,
+            limit:this.pageSize
+        })
+    },
+    handleCurrentChange(v){
+        this.pageNum = v
+        console.log(v);
+        this.getlist({
+            page:this.pageNum,
+            limit:this.pageSize
+        })
+    },
     handleChange() {
       console.log(this.price);
     },
     handleUpdate(obj) {
       console.log(obj);
+      this.temp = Object.assign({},obj)
+      console.log(this.temp);
+      this.dialogStatus = 'update'
+      this.dialogFormVisible = true
     },
     handleStatus(obj) {
       console.log(obj);
@@ -306,15 +335,48 @@ export default {
         this.list.splice(i, 1);
       }
     },
-    handleAdd(){
-        let data = {
-            content:this.content,
-            cover:"http://dummyimage.com/200x100",
-            price:this.price,
-            status:this.radio,
-            try:this.tryContent
+    async handleAdd() {
+      let id = parseInt(Math.random() * 100) + 1024 // mock a id
+      let time = new Date();
+      time = dateFtt("yyyy-MM-dd hh:mm:ss", time);
+      console.log(time);
+      let data = {
+        id:id,
+        content: this.temp.content,
+        cover: "http://dummyimage.com/200x100",
+        price: this.temp.price,
+        status: Number.parseInt(this.temp.radio),
+        try: this.temp.tryContent,
+        created_time: time,
+        sub_count: 6,
+        t_price: 99,
+        title: this.temp.title,
+        updated_time: time,
+      };
+      console.log(data);
+      let res = await createMedia(data);
+      console.log(res);
+      if (res.code === 20000) {
+        this.dialogFormVisible = false;
+        this.listData.unshift(data)
+        console.log(this.listData);
+      }
+    },
+    async updateData(){
+        console.log(123);
+        console.log(this.temp);
+        let time = new Date();
+        time = dateFtt("yyyy-MM-dd hh:mm:ss", time);
+        console.log(time);
+        this.temp.updated_time = time
+        let res = await updateMedia(this.temp)
+        console.log(res);
+        if(res.code === 20000){
+            let index = this.listData.findIndex( item => item.id = this.temp.id )
+            this.listData.splice(index,1,this.temp)
+            this.dialogFormVisible = false
+            this.$message.success("修改成功")
         }
-        console.log(data);
     }
   },
   filters: {
