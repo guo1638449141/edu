@@ -134,7 +134,7 @@
       :total="total">
     </el-pagination>
 
-    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
+    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible" fullscreen>
       <el-form
         ref="dataForm"
         :rules="rules"
@@ -160,8 +160,8 @@
           ></el-input-number>
         </el-form-item>
         <el-form-item label="课程价格">
-          <el-radio v-model="temp.status" label="1">下架</el-radio>
-          <el-radio v-model="temp.status" label="0">上架</el-radio>
+          <el-radio v-model="temp.status" :label="1">下架</el-radio>
+          <el-radio v-model="temp.status" :label="0">上架</el-radio>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">

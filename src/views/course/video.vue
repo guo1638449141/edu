@@ -123,7 +123,6 @@
         </template>
       </el-table-column>
     </el-table>
-
     <el-pagination
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
@@ -134,7 +133,7 @@
       :total="total">
     </el-pagination>
 
-    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
+    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible" fullscreen>
       <el-form
         ref="dataForm"
         :rules="rules"
@@ -174,10 +173,10 @@
 <script>
 import {
   fetchList,
-  createMedia,
-  updateMedia,
-  deleteMedia,
-} from "../../api/audio";
+  createVideo,
+  updateVideo,
+  deleteVideo,
+} from "../../api/video";
 
 import { dateFtt } from "../../utils/data";
 
@@ -338,7 +337,7 @@ export default {
     async handleDelete(obj, i) {
       console.log(obj);
       console.log(i);
-      let res = await deleteMedia(i);
+      let res = await deleteVideo(i);
       console.log(res);
       if (res.code === 20000) {
         this.$message.success("删除成功");
@@ -365,11 +364,11 @@ export default {
         updated_time: time,
       };
       console.log(data);
-      let res = await createMedia(data);
+      let res = await createVideo(data);
       console.log(res);
       if (res.code === 20000) {
         this.dialogFormVisible = false;
-        this.listData.unshift(data)
+        this.listData.unshift(data);
         console.log(this.listData);
       }
     },
@@ -382,7 +381,7 @@ export default {
         this.temp.updated_time = time
         this.temp.status = parseInt(this.temp.status)
         console.log(this.temp);
-        let res = await updateMedia(this.temp)
+        let res = await updateVideo(this.temp)
         console.log(res);
         if(res.code === 20000){
             let index = this.listData.findIndex( item => item.id = this.temp.id )

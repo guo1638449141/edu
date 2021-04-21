@@ -151,7 +151,7 @@ export const asyncRoutes = [
       },
       {
         path: 'voice',
-        component: () => import('@/views/course/voice'),
+        component: () => import('@/views/course/audio'),
         name: 'Voice',
         meta: {
           title: '音频'
@@ -171,6 +171,15 @@ export const asyncRoutes = [
         name: 'Column',
         meta: {
           title: '专栏'
+        }
+      },
+      {
+        hidden: true,
+        path: 'column_detail',
+        component: () => import('@/views/course/column_detail'),
+        name: 'ColumnDetail',
+        meta: {
+          title: '专栏详情'
         }
       }
     ]
