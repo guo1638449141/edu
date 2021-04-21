@@ -157,6 +157,8 @@
         </template>
       </el-table-column>
     </el-table>
+
+    <choose-course ref="chooseCourse"></choose-course>
   </div>
 </template>
 
@@ -166,7 +168,11 @@ const statusOptions = {
   0: "已下架",
   1: "已上架",
 };
+import chooseCourse from "@/components/ChooseCourse/index";
 export default {
+  components: {
+    chooseCourse,
+  },
   data() {
     return {
       list: [],
@@ -224,7 +230,9 @@ export default {
     },
     // 新增目录
     addCourse() {
-        
+      this.$refs.chooseCourse.open((val) => {
+        this.list = [...this.list, ...val];
+      }, 50);
     },
     // 搜索
     handleFilter() {
@@ -235,15 +243,16 @@ export default {
         } else if (this.listQuery.status == 1) {
           this.list = this.list.filter((item) => item.status === 1);
         }
-        if(this.listQuery.title){
-            console.log(this.listQuery.title);
-            this.list = this.list.filter(item => item.title.indexOf(this.listQuery.title) !== -1)
-            console.log(this.list);
-        }else{
-            this.getList()
+        if (this.listQuery.title) {
+          console.log(this.listQuery.title);
+          this.list = this.list.filter(
+            (item) => item.title.indexOf(this.listQuery.title) !== -1
+          );
+          console.log(this.list);
+        } else {
+          this.getList();
         }
       }, 1000);
-
     },
     // 编辑
     handleUpdate() {},
