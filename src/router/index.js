@@ -196,6 +196,44 @@ export const asyncRoutes = [
       }
     ]
   },
+  {
+    path: '/pay',
+    component: Layout,
+    redirect: '/pay/order',
+    alwaysShow: true, // will always show the root menu
+    name: 'Pay',
+    meta: {
+      title: '交易',
+      icon: 'excel',
+      roles: ['admin', 'editor'] // you can set roles in root nav
+    },
+    children: [
+      {
+        path: 'order',
+        component: () => import('@/views/pay/order'),
+        name: 'Order',
+        meta: {
+          title: '订单管理'
+        }
+      },
+      {
+        path: 'assets',
+        component: () => import('@/views/pay/assets'),
+        name: 'Assets',
+        meta: {
+          title: '资产管理'
+        }
+      },
+      {
+        path: 'payment',
+        component: () => import('@/views/pay/payment'),
+        name: 'Payment',
+        meta: {
+          title: '支付设置'
+        }
+      }
+    ]
+  },
   //   {
   //     path: '/permission',
   //     component: Layout,
