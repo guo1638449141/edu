@@ -44,10 +44,10 @@
 </el-table-column>
 <el-table-column label="操作" align="center" width="230" class-name="small-padding fixed-width">
     <template slot-scope="{row,$index}">
-          <el-button type="primary" size="mini" @click="handleUpdate(row)">
+          <el-button type="primary" size="mini" @click="handleUpdate(row,$index)">
             编辑
           </el-button>
-          <el-button size="mini" type="danger" :disabled="row.status == 0" @click="changeStatus(row)">下架</el-button>
+          <el-button size="mini" type="danger" :disabled="row.status == 0" @click="changeStatus(row,$index)">下架</el-button>
     </template>
 </el-table-column>
 </el-table>
