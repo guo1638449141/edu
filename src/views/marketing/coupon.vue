@@ -92,6 +92,81 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
+      <el-form
+        ref="dataForm"
+        :rules="rules"
+        :model="temp"
+        label-position="left"
+        label-width="90px"
+        style="width: 700px; margin-left: 50px"
+      >
+        <el-form-item label="类型" prop="type">
+          <el-select v-model="temp.type" @change="temp.value = null">
+            <el-option label="课程" value="course"></el-option>
+            <el-option label="专栏" value="column"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          :label="temp.type == 'course' ? '关联课程' : '关联专栏'"
+          prop="value"
+        >
+          <el-button type="primary" size="mini" @click="connectValue"
+            >关联</el-button
+          >
+          <div v-if="temp.value" style="display: flex">
+            <el-card shadow="always">
+              <div>
+                <img :src="temp.value.cover" />
+              </div>
+              <div>{{ temp.value.title }}</div>
+              <div style="color: red">￥{{ temp.value.price }}</div>
+            </el-card>
+          </div>
+        </el-form-item>
+        <el-form-item label="秒杀价" prop="price">
+          <el-input-number
+            v-model="temp.price"
+            size="mini"
+            :min="0"
+            :step="1"
+            :controls="true"
+            controls-position="both"
+          >
+          </el-input-number>
+        </el-form-item>
+        <el-form-item label="秒杀人数" prop="s_num">
+          <el-input-number
+            v-model="temp.s_num"
+            size="mini"
+            :min="0"
+            :step="1"
+            :controls="true"
+            controls-position="both"
+          >
+          </el-input-number>
+        </el-form-item>
+        <el-form-item label="秒杀活动开始时间-结束时间">
+          <el-date-picker
+            v-model="timerange"
+            type="datetimerange"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="yyyy-MM-dd HH:mm:ss"
+          ></el-date-picker>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false"> 取消 </el-button>
+        <el-button
+          type="primary"
+          @click="dialogStatus === 'create' ? createData() : updateData()"
+        >
+          提交
+        </el-button>
+      </div>
+    </el-dialog>
+    <choose-course ref="chooseCourse"></choose-course>
   </div>
 </template>
 
@@ -108,6 +183,13 @@ let timeStatusOptions = {
   3: "已下架",
 };
 export default {
+  components: {
+    chooseCourse,
+    Pagination,
+  },
+  directives: {
+    waves,
+  },
   data() {
     return {
       tableKey: 0,
@@ -119,12 +201,83 @@ export default {
         limit: 20,
       },
       dialogFormVisible: false,
+      temp: {
+        id: undefined,
+        type: "course",
+        // 关联课程/专栏
+        value: null,
+        price: 0.0,
+        c_num: 100,
+        condition: 0,
+        start_time: "",
+        end_time: "",
+        s_num: 0,
+      },
+      dialogStatus: "",
+      textMap: {
+        update: "修改",
+        create: "新增",
+      },
+      rules: {
+        type: [
+          {
+            required: true,
+            message: "类型不能为空",
+            trigger: "change",
+          },
+        ],
+        price: [
+          {
+            required: true,
+            message: "面值不能为空",
+            trigger: "blur",
+          },
+        ],
+        c_num: [
+          {
+            required: true,
+            message: "发行量不能为空",
+            trigger: "blur",
+          },
+        ],
+        condition: [
+          {
+            required: true,
+            message: "使用限制不能为空",
+            trigger: "blur",
+          },
+        ],
+      },
     };
+  },
+  computed: {
+    timerange: {
+      get() {
+        return [this.temp.start_time, this.temp.end_time];
+      },
+      set(val) {
+        this.temp.start_time = val[0];
+        this.temp.end_time = val[1];
+      },
+    },
   },
   created() {
     this.getlist();
   },
   methods: {
+    // 关联课程/专栏
+    connectValue() {
+      this.$refs.chooseCourse.open((val) => {
+        let item = val[0];
+        this.temp.value = {
+          id: item.id,
+          title: item.title,
+          cover: item.cover,
+          price: item.price,
+        };
+        this.$refs.dataForm.clearValidate();
+      }, 1);
+    },
     getlist() {
       this.listLoading = true;
       fetchCoupon().then((res) => {
@@ -141,8 +294,78 @@ export default {
         }
       });
     },
-    handleCreate() {},
-    handleUpdate() {},
+    resetTemp() {
+      this.temp = {
+        id: undefined,
+        type: "course",
+        // 关联课程/专栏
+        value: null,
+        price: 0.0,
+        c_num: 100,
+        condition: 0,
+        start_time: "",
+        end_time: "",
+        s_num: 0,
+      };
+    },
+    handleCreate() {
+      this.resetTemp();
+      this.dialogStatus = "create";
+      this.dialogFormVisible = true;
+      this.$nextTick(() => {
+        this.$refs["dataForm"].clearValidate();
+      });
+    },
+    createData() {
+      this.$refs["dataForm"].validate((valid) => {
+        if (this.temp.start_time == "" || this.temp.end_time == "") {
+          return this.$message({
+            message: "活动时间不能为空",
+            type: "warning",
+          });
+        }
+        if (valid) {
+          createCoupon(this.temp).then((res) => {
+            console.log(res);
+            if (res.code === 20000) {
+              this.dialogFormVisible = false;
+              this.$notify({
+                title: "成功",
+                message: "创建成功",
+                type: "success",
+                duration: 2000,
+              });
+              this.list.unshift(this.temp);
+            }
+          });
+        }
+      });
+    },
+    handleUpdate(row) {
+      this.temp = Object.assign({}, row);
+      this.temp.timestamp = new Date(this.temp.timestamp);
+      this.dialogStatus = "update";
+      this.dialogFormVisible = true;
+      this.$nextTick(() => {
+        this.$refs["dataForm"].clearValidate();
+      });
+    },
+    updateData() {
+      this.$refs["dataForm"].validate((valid) => {
+        if (valid) {
+          const tempData = Object.assign({}, this.temp);
+          updateCoupon(tempData).then(() => {
+            this.dialogFormVisible = false;
+            this.$notify({
+              title: "成功",
+              message: "修改成功",
+              type: "success",
+              duration: 2000,
+            });
+          });
+        }
+      });
+    },
     changeStatus(row) {
       this.$confirm("是否要下架该活动？", "提示", {
         confirmButtonText: "下架",
